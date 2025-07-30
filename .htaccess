@@ -1,0 +1,204 @@
+# ===== PORTFOLIO WEBSITE .HTACCESS =====
+# Security, Performance, and SEO Configuration
+
+# Enable rewrite engine
+RewriteEngine On
+
+# ===== SECURITY HEADERS =====
+
+# Prevent clickjacking
+Header always append X-Frame-Options SAMEORIGIN
+
+# Prevent MIME type sniffing
+Header always set X-Content-Type-Options nosniff
+
+# Enable XSS protection
+Header always set X-XSS-Protection "1; mode=block"
+
+# Referrer policy
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Content Security Policy (CSP)
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; frame-src 'none'; object-src 'none';"
+
+# ===== PERFORMANCE OPTIMIZATION =====
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Images
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    
+    # CSS and JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    
+    # Fonts
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    
+    # HTML
+    ExpiresByType text/html "access plus 1 hour"
+    
+    # Data
+    ExpiresByType application/json "access plus 1 hour"
+    ExpiresByType application/xml "access plus 1 hour"
+    ExpiresByType text/xml "access plus 1 hour"
+</IfModule>
+
+# ===== SECURITY RULES =====
+
+# Protect against common exploits
+<IfModule mod_rewrite.c>
+    # Block access to sensitive files
+    RewriteRule ^(\.htaccess|\.htpasswd|\.git|\.env|composer\.json|composer\.lock|package\.json|package-lock\.json|yarn\.lock|README\.md|CHANGELOG\.md|LICENSE|\.gitignore)$ - [F,L]
+    
+    # Block access to backup files
+    RewriteRule \.(bak|backup|old|orig|save|swp|sql|log)$ - [F,L]
+    
+    # Block access to configuration files
+    RewriteRule \.(ini|conf|config|cfg)$ - [F,L]
+    
+    # Block access to temporary files
+    RewriteRule \.(tmp|temp|cache)$ - [F,L]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Disable server signature
+ServerSignature Off
+
+# ===== PHP SECURITY =====
+
+# Disable PHP execution in uploads directory (if exists)
+<Directory "uploads">
+    <FilesMatch "\.php$">
+        Require all denied
+    </FilesMatch>
+</Directory>
+
+# ===== ERROR PAGES =====
+
+# Custom error pages
+ErrorDocument 400 /error.html
+ErrorDocument 401 /error.html
+ErrorDocument 403 /error.html
+ErrorDocument 404 /error.html
+ErrorDocument 500 /error.html
+
+# ===== SEO OPTIMIZATION =====
+
+# Remove trailing slashes
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [R=301,L]
+
+# Force HTTPS (uncomment if using SSL)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Remove www (uncomment if needed)
+# RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+# RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# ===== CONTACT FORM PROTECTION =====
+
+# Rate limiting for contact form (basic)
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_METHOD} POST
+    RewriteCond %{REQUEST_URI} process_contact\.php
+    RewriteCond %{HTTP_REFERER} !^https?://%{HTTP_HOST} [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# ===== LOGS PROTECTION =====
+
+# Protect logs directory
+<Directory "logs">
+    Require all denied
+</Directory>
+
+# ===== FAVICON =====
+
+# Serve favicon without 404 errors
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^favicon\.ico$ /assets/images/favicon.ico [L]
+
+# ===== ROBOTS.TXT =====
+
+# Serve robots.txt
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^robots\.txt$ /robots.txt [L]
+
+# ===== SITEMAP =====
+
+# Serve sitemap
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^sitemap\.xml$ /sitemap.xml [L]
+
+# ===== ADDITIONAL SECURITY =====
+
+# Block bad bots
+RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+RewriteCond %{HTTP_USER_AGENT} ^(java|curl|wget).* [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ^.*(libwww-perl|curl|wget|python|nikto|scan).* [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} ^.*(winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner).* [NC]
+RewriteRule .* - [F,L]
+
+# Block access to hidden files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# ===== PERFORMANCE HEADERS =====
+
+# Preload critical resources
+<IfModule mod_headers.c>
+    # Preload CSS
+    <FilesMatch "\.css$">
+        Header set Link "</assets/css/style.css>; rel=preload; as=style"
+    </FilesMatch>
+    
+    # Preload JavaScript
+    <FilesMatch "\.js$">
+        Header set Link "</assets/js/script.js>; rel=preload; as=script"
+    </FilesMatch>
+</IfModule>
+
+# ===== CACHE CONTROL =====
+
+# Cache static assets
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    Header set Cache-Control "public, max-age=31536000"
+</FilesMatch>
+
+# No cache for dynamic content
+<FilesMatch "\.(php|html)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch> 
